@@ -1,18 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "Util.h"
 
-// Function to skip comments and whitespace in PPM file
-void skipCommentsAndWhitespace(FILE *file) {
-    int ch;
-    while ((ch = fgetc(file)) != EOF) {
-        if (ch == '#') { // Skip comments (lines starting with '#')
-            while (fgetc(file) != '\n');
-        } else if (ch != ' ' && ch != '\n' && ch != '\r' && ch != '\t') {
-            ungetc(ch, file); // Put back the first non-whitespace character
-            break;
-        }
-    }
-}
+
+int pm_getint(FILE* file);          
+unsigned char pm_getrawbyte(FILE* file); 
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -26,26 +18,32 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Reading the PPM header
-    char format[3];
-    int width, height, maxval;
-    fscanf(inputFile, "%2s", format);
 
-    // Check if it's a binary PPM (P6)
+    char format[3];
+    format[0] = pm_getrawbyte(inputFile);  
+    format[1] = pm_getrawbyte(inputFile);  
+    format[2] = '\0';
+
+    
     if (format[0] != 'P' || format[1] != '6') {
         printf("Input file is not a binary PPM (P6) image.\n");
         fclose(inputFile);
         return 1;
     }
 
-    // Skip comments and whitespace, and read width, height, and maxval
-    skipCommentsAndWhitespace(inputFile);
-    fscanf(inputFile, "%d %d", &width, &height);
-    skipCommentsAndWhitespace(inputFile);
-    fscanf(inputFile, "%d", &maxval);
-    fgetc(inputFile); // Skip the single whitespace character after maxval
+    
+    int width = pm_getint(inputFile);
+    int height = pm_getint(inputFile);
+    int maxval = pm_getint(inputFile);
 
-    // Allocate memory to store the pixel data (RGB)
+    
+    if (maxval != 255) {
+        printf("Unsupported max color value (only 255 is supported).\n");
+        fclose(inputFile);
+        return 1;
+    }
+
+    // Allouer de la mémoire pour stocker les données d'image (RGB)
     unsigned char *imageData = (unsigned char *)malloc(3 * width * height);
     if (imageData == NULL) {
         printf("Memory allocation failed.\n");
@@ -53,11 +51,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Read the pixel data from the PPM file
+    // Lire les données d'image (RGB) du fichier PPM
     fread(imageData, 3, width * height, inputFile);
     fclose(inputFile);
 
-    // Open output files for Red, Green, and Blue components
+    // Ouvrir les fichiers de sortie pour les composantes Rouge, Vert et Bleu
     FILE *redFile = fopen("red.pgm", "wb");
     FILE *greenFile = fopen("green.pgm", "wb");
     FILE *blueFile = fopen("blue.pgm", "wb");
@@ -68,12 +66,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Write PGM headers to the three files
+    // Écrire les en-têtes PGM dans les trois fichiers
     fprintf(redFile, "P5\n%d %d\n%d\n", width, height, maxval);
     fprintf(greenFile, "P5\n%d %d\n%d\n", width, height, maxval);
     fprintf(blueFile, "P5\n%d %d\n%d\n", width, height, maxval);
 
-    // Allocate memory for the grayscale images
+    
     unsigned char *redComponent = (unsigned char *)malloc(width * height);
     unsigned char *greenComponent = (unsigned char *)malloc(width * height);
     unsigned char *blueComponent = (unsigned char *)malloc(width * height);
@@ -87,19 +85,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Split the RGB components into three grayscale images
+    
     for (int i = 0; i < width * height; i++) {
-        redComponent[i] = imageData[3 * i];      // Red component
-        greenComponent[i] = imageData[3 * i + 1]; // Green component
-        blueComponent[i] = imageData[3 * i + 2];  // Blue component
+        redComponent[i] = imageData[3 * i];      // Composante Rouge
+        greenComponent[i] = imageData[3 * i + 1]; // Composante Verte
+        blueComponent[i] = imageData[3 * i + 2];  // Composante Bleue
     }
 
-    // Write grayscale images to their respective files
+    
     fwrite(redComponent, 1, width * height, redFile);
     fwrite(greenComponent, 1, width * height, greenFile);
     fwrite(blueComponent, 1, width * height, blueFile);
 
-    // Free memory and close files
+    
     free(imageData);
     free(redComponent);
     free(greenComponent);
