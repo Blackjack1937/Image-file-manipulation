@@ -7,7 +7,7 @@ unsigned char pm_getrawbyte(FILE *file);
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2) // added one parameter to the args count (no need actually)
+    if (argc != 2)
     {
         printf("Usage: %s <input_ppm_file>\n", argv[0]);
         return 1;
@@ -20,7 +20,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int brightness_adjust = scanf("Enter a brightness adjustment value : ");
+    // Getting the brightness adjustment parameter from stdin
+    int brightness_adjust;
+    printf("Enter a brightness adjustment value: ");
+    scanf("%d", &brightness_adjust);
 
     char format[3];
     format[0] = pm_getrawbyte(inputFile);
@@ -80,28 +83,28 @@ int main(int argc, char *argv[])
     // Convert RGB to grayscale
     for (int i = 0; i < width * height; i++)
     {
-        unsigned char r = imageData[3 * i];     // Red component
-        unsigned char g = imageData[3 * i + 1]; // Green component
-        unsigned char b = imageData[3 * i + 2]; // Blue component
+        unsigned char r = imageData[3 * i];     // Red value
+        unsigned char g = imageData[3 * i + 1]; // Green value
+        unsigned char b = imageData[3 * i + 2]; // Blue value
 
-        // Calculate grayscale value using weighted sum of RGB components
-        unsigned char rgb = (r + g + b) / 3 - brightness_adjust;
+        int grayscale_value = (r + g + b) / 3;
 
-        if (rgb < 0 || rgb > 255)
+        grayscale_value += brightness_adjust;
+
+        if (grayscale_value > 255)
         {
-            grayImage[i] = (unsigned char)((r + g + b) / 3 - brightness_adjust);
+            grayscale_value = 255;
         }
-        else
+        else if (grayscale_value < 0)
         {
-            printf("The brightness adjustment is invalid");
-            return 1;
+            grayscale_value = 0;
         }
+
+        grayImage[i] = (unsigned char)grayscale_value;
     }
 
-    // Write the grayscale image data to the PGM file
     fwrite(grayImage, 1, width * height, outputFile);
 
-    // Free allocated memory and close files
     free(imageData);
     free(grayImage);
     fclose(outputFile);
