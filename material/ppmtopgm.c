@@ -7,7 +7,7 @@ unsigned char pm_getrawbyte(FILE *file);
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 2) // added one parameter to the args count (no need actually)
     {
         printf("Usage: %s <input_ppm_file>\n", argv[0]);
         return 1;
@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
         printf("Error opening input file.\n");
         return 1;
     }
+
+    int brightness_adjust = scanf("Enter a brightness adjustment value : ");
 
     char format[3];
     format[0] = pm_getrawbyte(inputFile);
@@ -83,7 +85,17 @@ int main(int argc, char *argv[])
         unsigned char b = imageData[3 * i + 2]; // Blue component
 
         // Calculate grayscale value using weighted sum of RGB components
-        grayImage[i] = (unsigned char)((r + g + b) / 3);
+        unsigned char rgb = (r + g + b) / 3 - brightness_adjust;
+
+        if (rgb < 0 || rgb > 255)
+        {
+            grayImage[i] = (unsigned char)((r + g + b) / 3 - brightness_adjust);
+        }
+        else
+        {
+            printf("The brightness adjustment is invalid");
+            return 1;
+        }
     }
 
     // Write the grayscale image data to the PGM file
