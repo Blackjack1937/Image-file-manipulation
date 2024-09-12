@@ -65,8 +65,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Écrire les en-têtes PGM dans les trois fichiers
-    fprintf(redFile, "P5\n%d %d\n%d\n", width, height, maxval);
+        fprintf(redFile, "P5\n%d %d\n%d\n", width, height, maxval);
     fprintf(greenFile, "P5\n%d %d\n%d\n", width, height, maxval);
     fprintf(blueFile, "P5\n%d %d\n%d\n", width, height, maxval);
 
@@ -86,9 +85,9 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < width * height; i++)
     {
-        redComponent[i] = imageData[3 * i];       // Composante Rouge
-        greenComponent[i] = imageData[3 * i + 1]; // Composante Verte
-        blueComponent[i] = imageData[3 * i + 2];  // Composante Bleue
+        redComponent[i] = imageData[3 * i];       // Red
+        greenComponent[i] = imageData[3 * i + 1]; // Green
+        blueComponent[i] = imageData[3 * i + 2];  // Blue
     }
 
     fwrite(redComponent, 1, width * height, redFile);
