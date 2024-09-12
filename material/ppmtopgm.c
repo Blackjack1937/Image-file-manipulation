@@ -54,56 +54,47 @@ int main(int argc, char *argv[])
     fread(imageData, 3, width * height, inputFile);
     fclose(inputFile);
 
-    FILE *redFile = fopen("red.pgm", "wb");
-    FILE *greenFile = fopen("green.pgm", "wb");
-    FILE *blueFile = fopen("blue.pgm", "wb");
-
-    if (redFile == NULL || greenFile == NULL || blueFile == NULL)
+    FILE *outputFile = fopen("output.pgm", "wb");
+    if (outputFile == NULL)
     {
-        printf("Error creating output files.\n");
+        printf("Error creating output file.\n");
         free(imageData);
         return 1;
     }
 
-    // Écrire les en-têtes PGM dans les trois fichiers
-    fprintf(redFile, "P5\n%d %d\n%d\n", width, height, maxval);
-    fprintf(greenFile, "P5\n%d %d\n%d\n", width, height, maxval);
-    fprintf(blueFile, "P5\n%d %d\n%d\n", width, height, maxval);
+    // Write the PGM header
+    fprintf(outputFile, "P5\n%d %d\n%d\n", width, height, maxval);
 
-    unsigned char *redComponent = (unsigned char *)malloc(width * height);
-    unsigned char *greenComponent = (unsigned char *)malloc(width * height);
-    unsigned char *blueComponent = (unsigned char *)malloc(width * height);
-
-    if (redComponent == NULL || greenComponent == NULL || blueComponent == NULL)
+    // Allocate memory for the grayscale image
+    unsigned char *grayImage = (unsigned char *)malloc(width * height);
+    if (grayImage == NULL)
     {
         printf("Memory allocation failed.\n");
         free(imageData);
-        fclose(redFile);
-        fclose(greenFile);
-        fclose(blueFile);
+        fclose(outputFile);
         return 1;
     }
 
+    // Convert RGB to grayscale
     for (int i = 0; i < width * height; i++)
     {
-        redComponent[i] = imageData[3 * i];       // Composante Rouge
-        greenComponent[i] = imageData[3 * i + 1]; // Composante Verte
-        blueComponent[i] = imageData[3 * i + 2];  // Composante Bleue
+        unsigned char r = imageData[3 * i];     // Red component
+        unsigned char g = imageData[3 * i + 1]; // Green component
+        unsigned char b = imageData[3 * i + 2]; // Blue component
+
+        // Calculate grayscale value using weighted sum of RGB components
+        grayImage[i] = (unsigned char)((r + g + b) / 3);
     }
 
-    fwrite(redComponent, 1, width * height, redFile);
-    fwrite(greenComponent, 1, width * height, greenFile);
-    fwrite(blueComponent, 1, width * height, blueFile);
+    // Write the grayscale image data to the PGM file
+    fwrite(grayImage, 1, width * height, outputFile);
 
+    // Free allocated memory and close files
     free(imageData);
-    free(redComponent);
-    free(greenComponent);
-    free(blueComponent);
-    fclose(redFile);
-    fclose(greenFile);
-    fclose(blueFile);
+    free(grayImage);
+    fclose(outputFile);
 
-    printf("Red, Green, and Blue component images saved as red.pgm, green.pgm, and blue.pgm.\n");
+    printf("PPM image successfully converted to output.pgm.\n");
 
     return 0;
 }
